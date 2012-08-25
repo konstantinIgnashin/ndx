@@ -1,0 +1,373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Тестовая страница</title>
+<link rel="stylesheet" type="text/css" href="css/main.css">
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery.mousewheel.js"></script>
+<script>
+var T = {};
+T.loader = {
+	el:'.app-loader',
+	answer:'html',
+	show:function(){
+		$(this.el).addClass('show');
+	},
+	hide:function(){
+		$(this.el).removeClass('show');
+	},
+	getJSON:function (url , data, callback){		
+		T.loader.show();
+		if($.isFunction(data)){
+			callback = data;
+			data = undefined;
+		}					
+		return $.ajax({
+				'url':  url, 
+				'type': 'GET',
+				'dataType': this.answer,	
+				data: data,
+				success: function (data, textStatus) {
+					if($.isFunction(callback)){
+						callback(data);	
+					}
+					T.loader.hide();
+				},
+				error:function (xhr, ajaxOptions, thrownError){
+					//alert(ajaxOptions.url + "\n" + thrownError );               		
+			   }			
+		});			
+	}
+
+};
+
+
+
+T.lib = {
+	getHash:function(hash){
+		var a = hash.split('#',2);
+		return a[1];
+	},
+	print:function(el){		
+		this.print.remove = function(){			
+			$('#modal').html('').hide(200);			
+		}
+		$('#modal').html($('.area').html()).show(200).click(T.lib.print.remove);		
+		return false;
+	}
+};
+
+
+
+T.leftMenu = (function(self, $){
+	self.context = '.left-menu';
+	var _c2 = {
+			c:self.context,
+			elements:{},
+			selectedIndex:0,
+			lastIndex:0,			
+			callBack: function(){
+				$(this.c).focus();												
+			},	
+			loadData:function(){
+				$("li", this.c).each(function(i, value) {    					
+					_c2.lastIndex = i;
+					_c2.elements[i]= this;					
+				});			
+			},			
+			selectFirst:function(){
+				this.selectCurrent(0);				
+			},
+			selectLast:function(){				
+				this.selectCurrent(this.lastIndex);	
+			},
+			selectNext:function(){				
+				if($(this.elements[this.selectedIndex+1]).is(':visible')){
+					this.selectCurrent(this.selectedIndex+1);
+				}
+				else{
+					var index = this.selectedIndex+1;					
+					(this.elements[index]==undefined)?index=0:'';
+					while(this.elements[index]){
+						if($(this.elements[index]).is(':visible')){
+							this.selectCurrent(index);
+							break;						
+						}
+						if(index==this.lastIndex){
+							index = -1;
+						}
+						index++;
+					}
+				}				
+			},
+			selectPrev:function(){				
+				if($(this.elements[this.selectedIndex-1]).is(':visible')){
+					this.selectCurrent(this.selectedIndex-1);				
+				}
+				else{
+					var index = this.selectedIndex-1;
+					(index<0)?index=this.lastIndex:'';					
+					while(this.elements[index]){
+						if($(this.elements[index]).is(':visible')){
+							this.selectCurrent(index);
+							break;						
+						}
+						index--;
+					}
+				}						
+			},
+			selectCurrent:function(index){
+				$('li', this.c).removeClass('active');					
+				$(this.elements[index]).addClass('active');
+				
+				this.selectedIndex = index;
+				this.callBack();
+			},
+			slideInside: function(){
+				if($('ul',this.elements[this.selectedIndex]).is(':visible')){
+					$('ul',this.elements[this.selectedIndex]).hide(200);						
+				}
+				else{
+					$('ul',this.elements[_c2.selectedIndex]).show(200);						
+				}
+				$(self.context).focus();					
+			},
+			clickCurrent:function(){
+				$('a',this.elements[this.selectedIndex])[0].click();
+			},
+			resetFocus:function(e){
+				e.preventDefault();
+				$(self.context).blur();				
+				return false;			
+			},
+			mousewheel: function(){		
+				$(document).bind('mousewheel', function(event) {  			
+					var delta = event.wheelDelta || -event.detail;			
+					if($(self.context).hasClass('focused')){				
+						(delta<0)?_c2.selectNext():_c2.selectPrev();				
+						event.preventDefault();
+					}	
+				}).mousedown(function(event){	
+					if($(self.context).hasClass('focused')){
+						event.preventDefault();
+						event.stopPropagation();
+						switch(event.which)	{
+							case 1:_c2.clickCurrent();break;
+							case 2:_c2.slideInside();break;
+							case 3:_c2.resetFocus(event);break;							
+						}							
+					}
+					return false;	
+				});	
+			},
+			
+				
+	}
+	
+	self.itemClick = function(){
+		var append = function(t,d,el){
+			var t = '<div class="head">'+t+'<a href="html/'+T.lib.getHash(el.href)+'.html" onclick="return T.lib.print(this);">Print</a></div>';
+			var d = '<div class="body">'+d+'</div>';
+			$('.area').html('<div class="answer-tpl">'+t+d+'</div>');
+		}
+		
+		$(self.context+' a').click(function(){			
+			var el = this;
+			if($('ul',$(el).parent('li')).size()){
+				_c2.slideInside();
+			}
+			else{			
+				var t = $(el).text();
+				var d = $('#'+T.lib.getHash(el.href)).html();
+				if(d!=null){
+					append(t, d, el);					
+				}
+				else{					
+					T.loader.getJSON('html/'+T.lib.getHash(el.href)+'.html', function(data){				
+						append(t, data, el);		
+					});					
+				}
+				
+			}			
+			return false;
+		});
+	}	
+	
+	self.start = function(){		
+		$(self.context).focus(function(){ 					 
+			$(this).addClass('focused');
+			$(document).bind('contextmenu',function(){return false;});		
+		}).blur(function(){	
+			var el = this;
+			setTimeout(function(){
+				$(el).removeClass('focused');	
+			},10);		
+		});		
+		_c2.loadData();
+		_c2.selectFirst();
+		_c2.mousewheel();
+		self.itemClick();
+	}
+
+	return self;
+})(T.leftMenu || {}, jQuery);
+
+
+$(document).ready(function(){
+	T.leftMenu.start();
+});
+</script>
+
+<style>
+	body  {background: url("images/bg/bg20.jpg") repeat; font: 13px "Verdana",Helvetica,sans-serif;}
+	ul,li {margin:0;padding:0;}
+	.clear {clear:both;}
+	#header {background:#F2F2F2;border: 1px solid #ccc; box-shadow: -1px -1px 1px #FFF; color: #58595B; margin: 5px auto; width: 1240px;}
+	#header .border { border-top: 1px solid #FBFBFB;}
+	#header .app-uinfo { float:right; padding:8px 10px 11px 5px;}
+	#header .app-uinfo span{ padding-right:10px; }
+	#header .app-title { float:left;  padding:8px 5px 11px 15px;}	
+	#header .app-loader{ float:left; margin:7px 5px; background:url("images/loader.gif") no-repeat; height:16px; width:16px; visibility:hidden;}
+	#header .app-loader.show { visibility:visible; }
+	
+	#body-area {margin: 1px auto 5px; width: 1243px;}
+	
+	
+	.hide {display:none;}
+	.show {display:block;}	
+	.left-menu {float:left; border:1px solid #ccc; background:#fbfbfb;width:340px;height:593px;
+			    padding:0; background:#F2F2F2; box-shadow: -1px -1px 1px #FFF; overflow-y: auto;}
+	.left-menu.focused {box-shadow: 0 0 5px #008EE8;}
+	.left-menu li { margin:0px;padding:0px;}
+	.left-menu li a{ display: block; padding: 8px 20px; text-decoration: none; color: #58595B; border-top: 1px solid #FBFBFB; border-bottom:1px solid #DDD;}
+	.left-menu li:first-child { border-top: 1px solid #ddd;}
+	.left-menu li:hover >a:not(.active){ background: #f8f8f8; }
+	.left-menu li.active >a { background: #e8e8e8; box-shadow: inset -1px 0px 1px #c5c5c5; margin-top:0; border-top-color: #c5c5c5; border-bottom-color: #CCC; margin-top: -1px; padding-top: 9px;}
+	.left-menu ul.inside li a {padding-left:30px;}
+	.left-menu .head{padding:5px;}
+	
+	.area{float:right;}
+	
+	.answer-tpl {border:1px solid #ccc; background:#fbfbfb; width:880px; border-radius: 3px 3px 0 0;}
+	.answer-tpl .head {padding:7px;border-bottom:1px solid #ccc; background:#f3f3f3;font-size:16px;font-weight:bold;border-radius: 3px 3px 0 0;}
+	.answer-tpl .head a {float:right; text-decoration:underline; cursor:pointer;color:#0066FF;font-size:13px;}
+	.answer-tpl .body {padding:10px 7px 30px;}
+	.answer-tpl .body ul {margin-left:15px;}
+	.answer-tpl .body ul li {padding-bottom:5px;}
+	
+	#footer { margin:5px auto; width:1240px;background:#F2F2F2; border:1px solid #ccc;color:#58595B;box-shadow: -1px -1px 1px #FFF;}
+	#footer .border {border-top: 1px solid #FBFBFB;} 
+	#footer .site-info { padding:8px 10px 11px 5px; text-align:center;}
+	
+	#modal {background: #fff; font: 13px "Verdana",Helvetica,sans-serif;width:100%; position:absolute;top:0;height:100%;display:none;}
+	#modal .answer-tpl {margin:0 auto;}
+</style>
+
+</head>
+
+<body>
+	<div id="header">		
+		<div class="border">
+			<div class="app-title" tabindex="2">Тестовая страница</div>
+			<div class="app-loader"></div>
+			<div class="app-uinfo"><span>Konstantin Ignashin</span><a href="/admin/logout">Выйти</a></div>
+				<div class="clear"></div>
+			</div>
+		</div>		
+	</div>
+	
+	
+	
+<div id="body-area">
+	<div class="left-menu" tabindex="1" accesskey="q">		
+			<div class="head">Меню (CTRL+SHIFT+Q)</div>
+			<ul>
+				<li><a href="#q1">Общие вопросы</a>
+					<ul class="inside hide">
+						<li><a href="#q1-1" >Фамилия, имя, отчество</a></li>
+						<li><a href="#q1-2" >Е-mail</a></li>
+						<li><a href="#q1-3" >Телефон</a></li>
+						<li><a href="#q1-4" >Год рождения</a></li>
+						<li><a href="#q1-5" >Город, в котором живёте</a></li>
+						<li><a href="#q1-6" >Вуз, факультет, специальность, кафедра</a></li>
+						<li><a href="#q1-7" >На каком уровне вы владеете английским языком</a></li>
+						<li><a href="#q1-8" >Чего вы ожидаете от участия в Школе</a></li>
+						<li><a href="#q1-9" >Откуда вы о нас узнали</a></li>
+						<li><a href="#q1-10" >Сколько времени вы готовы уделять стажировке или работе в Яндексе</a></li>
+						
+					</ul>
+				</li>	
+				<li><a href="#">Опыт разработки</a>
+					<ul class="inside hide">
+						<li><a href="#q2-1">Расскажите нам о вашем опыте разработки. Ничего не упускайте: это может быть как серьезный интерфейс, так и просто домашняя страничка.</a></li>
+						<li><a href="#q2-2">Какие языки программирования, фреймворки и технологии вы использовали? Сложились ли у вас личные предпочтения?</a></li>
+						<li><a href="#q2-3">Какие редакторы и среды разработки вы использовали? Чем обычно пользуетесь?</a></li>
+						<li><a href="#q2-4">С какими ОС приходилось сталкиваться? Для каких целей вы их использовали?</a></li>
+						<li><a href="#q2-5">Приходилось ли вам пользоваться системами контроля версий? Если да, то какими? Какая из них вам нравится больше всего?</a></li>
+						<li><a href="#q2-6">Использовали ли вы системы постановки и ведения задач?</a></li>
+						<li><a href="#q2-7">Какие полезные для фронтенд-разработчика ресурсы вы используете и можете посоветовать?</a></li>
+						<li><a href="#q2-8">Работали ли вы где-нибудь? Какие у вас были должностные обязанности? Есть ли опыт работы в команде?</a></li>
+					</ul>				
+				</li>
+				<li><a href="#">Технические вопросы</a>
+					<ul class="inside hide">
+						<li><a href="#q3-1">Перечислите известные вам инструменты и приёмы для отладки кода в разных браузерах. </a></li>
+						<li><a href="#q3-2">Опишите своими словами, что происходит в браузерах при клике на ссылку yandex.ru</a></li>
+						<li><a href="#q3-3">Предположим, что мы представляем автосалон по продаже японских и немецких автомобилей. У нас есть базовые классы и примеры их использования. Допишите недостающий код.</a></li>
+						<li><a href="#q3-4">Найдите все текстовые файлы (*.txt), в имени которых содержится «yandex», а в содержимом — «школа разработки интерфейсов». </a></li>
+						<li><a href="#q3-5">Дана программа, реализованная одновременно на Bash, Python и Perl. Программа принимает произвольное количество аргументов и печатает их количество. Нужно добавить опцию -v для verbose-режима, в котором дополнительно выводится значение каждого из аргументов. </a></li>
+						<li><a href="#q3-6">Расскажите, в каком объёме и при каких обстоятельствах вы изучали следующие темы: языки программирования (императивные/декларативные, разные системы типов), структуры (классы, структуры данных, примитивные типы), парадигмы (события, ООП, параллельность/асинхронность, кеширование), алгоритмы (парсинг, сортировка, поиск), паттерны. </a></li>
+					</ul>		
+				</li>	
+					
+			</ul>	
+	</div>
+	<div class="area">
+		<div class="answer-tpl">
+			<div class="head">Краткая информация о работе данной страницы</div>
+			<div class="body">
+				<p>Принцип работы левого меню:</p>
+				<ul>
+					<li>При загрузке страницы активируется блок левого меню, (сигнализирует об этом синяя рамка) и перемещаться по меню можно со помощью кнопок мыши.</li>
+					<li>Когда меню активно, кнопки мыши перестают работать для всей страницы и работают только на левое меню.</li>
+					
+					<li>LeftMouseClick раскрывает уровни меню, если вних вложено еще меню, если подменю не найдено тогда открываем контент текущей ссылки.</li>
+					<li>Контент текущей ссылки находится либо скрытым на текущей странице, либо если на странице он не найден, тогда грузится из дополнительных файлов проекта.</li>
+					<li>Scroll на мыши также служит для перемещения по дереву меню, нажатие на ScrollMouseButton аналогичны LeftMouseClick</li>
+					<li>Когда появляется полоса прокрутки в левом меню, ее можно прокручивать с помощью кнопок на клавиатуре Up, Down</li>
+					<li>Если необходимо снять фокус с левого меню (например открыть печатную версию), то кликнув правой мышью в любом месте документа, фокус с меню снимается.</li>
+					<li>Также активировать меню можно с помощью горячих клавиш браузера (mozilla Ctrl+Shift+Q).</li>
+					
+				</ul>
+			</div>
+		</div>
+	
+	</div>
+	<div class="clear"></div>
+</div> <!-- end body area-->
+
+<div id="footer">
+	<div class="border">
+		<div class="site-info">Copyrights <a href="http://trader.uz">Ignashin Konstantin</a> 2007 - 2012</div>
+	</div>
+</div>
+
+<div style="display:none;;">
+	<div id="q1-1">Игнашин Константин Геннадьевич</div>
+	<div id="q1-2">Мои емайлы: shitt6@mail.ru, admin@trader.uz</div>
+	<div id="q1-3">Мои телефоны: +99890 9168077 (мобильный), +9987071 44446 (домашний)</div>
+	<div id="q1-4">Дата рождения: 1987-29-06</div>
+	<div id="q1-5">Живу: Узбекистан, Ташкентская область, город Чирчик</div>
+	<div id="q1-6">Закончил ТГАИ (Ташкентский Государственный Авиацонный Институт), факультет Гражданской Авиации, специальность Ремонт летательных аппаратов и аэропортов, кафедра радиоэлектроники.</div>
+	<div id="q1-7">С трудом понимаю разговорный английский, без проблем понимаю английский на уровне переписки или чтения документации.</div>
+	<div id="q1-8">От школы хочу наверстать пробелы в теоритической части промышленного програмирования масштабируемых интерфейсов, изучить современные технологии проектировки проектов.</div>
+	<div id="q1-9">Приглашение по email</div>
+	<div id="q1-10">Обучению могу уделить могу от 2х до 4х часов в будни, возможны и другие варианты.</div>
+	
+</div>
+	<div id="modal"></div>
+</body>
+</html>
+
+
