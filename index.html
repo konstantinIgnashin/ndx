@@ -11,7 +11,7 @@ var T = {};
 T.opts = {slideSpeed:200};
 T.loader = {
 	el:'.app-loader',
-	isBusy:false;
+	isBusy:false,
 	answer:'html',
 	show:function(){
 		$(this.el).addClass('show');
@@ -21,7 +21,7 @@ T.loader = {
 	},
 	getJSON:function (url , data, callback){		
 		T.loader.show();
-		if(T.loader.isBusy == '')return false;
+		if(T.loader.isBusy == true)return false;
 		T.loader.isBusy = true;
 		if($.isFunction(data)){
 			callback = data;
