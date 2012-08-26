@@ -11,15 +11,18 @@ var T = {};
 T.opts = {slideSpeed:200};
 T.loader = {
 	el:'.app-loader',
+	isBusy:false;
 	answer:'html',
 	show:function(){
 		$(this.el).addClass('show');
 	},
 	hide:function(){
-		$(this.el).removeClass('show');
+		$(this.el).removeClass('show');		
 	},
 	getJSON:function (url , data, callback){		
 		T.loader.show();
+		if(T.loader.isBusy == '')return false;
+		T.loader.isBusy = true;
 		if($.isFunction(data)){
 			callback = data;
 			data = undefined;
@@ -32,8 +35,10 @@ T.loader = {
 				success: function (data, textStatus) {	
 					if($.isFunction(callback))callback(data);					
 					T.loader.hide();
+					T.loader.isBusy = false;
 				},
 				error:function(xhr){
+					T.loader.isBusy = false;
 					alert(xhr.status);               		
 			   }			
 		});			
