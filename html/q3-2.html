@@ -1,0 +1,21 @@
+<p>Предположим что у нас в документе такая модель:</p>
+<textarea cols="100" rows="6">
+<div class="ya1" id="ya1">
+	<div class="ya2" id="ya2">
+		<a href="http://yandex.ru" id="ya3">yandex</a>
+	</div>
+</div>
+<script>
+    document.getElementById("ya1").addEventListener("click", function() { alert(1) }, true);
+    document.getElementById("ya2").addEventListener("click", function() { alert(2) }, true);
+    document.getElementById("ya3").addEventListener("click", function() { alert(3) }, true);
+    document.getElementById("ya1").addEventListener("click", function() { alert(1) }, false);
+    document.getElementById("ya2").addEventListener("click", function() { alert(2) }, false);
+    document.getElementById("ya3").addEventListener("click", function() { alert(3) }, false);
+</script>
+</textarea>
+
+<p>Затем кликая на ссылку yandex происходит первая фаза захвата события Capturing оно распространяется от корня документа по всем элементам-родителям ссылки yandex т.е. сначала событие произойдет на #ya1 потом на #ya2 и затем на #ya3.</p>
+<p> После того как браузер провел первую фазу Capturing, происходит вторая фаза bubling т.е. всплытие события но уже от ссылки yandex к корню документа по цепочке родителей (#ya1, #ya2, #ya3). И мы можем перехватить произошедшее событие на любом этапе и на любом родителе, на фазе захвата или на фазе всплытия.</p>
+<p> В методе добавляющем событие (addEventListener) мы используем 3й параметр (true, false) для того, чтобы уточнить на какой фазе мы хотим ловить событие при захвате или при всплытии. True используется для фазы захвата, False для фазы всплытия.</p>
+<p>По материалам <a href="http://javascript.ru/tutorial/events/intro">Javascript events</a></p>

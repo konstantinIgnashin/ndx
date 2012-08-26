@@ -8,6 +8,7 @@
 <script type="text/javascript" src="js/jquery.mousewheel.js"></script>
 <script>
 var T = {};
+T.opts = {slideSpeed:200};
 T.loader = {
 	el:'.app-loader',
 	answer:'html',
@@ -22,20 +23,18 @@ T.loader = {
 		if($.isFunction(data)){
 			callback = data;
 			data = undefined;
-		}					
+		}	
 		return $.ajax({
 				'url':  url, 
 				'type': 'GET',
 				'dataType': this.answer,	
-				data: data,
-				success: function (data, textStatus) {
-					if($.isFunction(callback)){
-						callback(data);	
-					}
+				'data': data,
+				success: function (data, textStatus) {	
+					if($.isFunction(callback))callback(data);					
 					T.loader.hide();
 				},
-				error:function (xhr, ajaxOptions, thrownError){
-					//alert(ajaxOptions.url + "\n" + thrownError );               		
+				error:function(xhr){
+					alert(xhr.status);               		
 			   }			
 		});			
 	}
@@ -51,9 +50,9 @@ T.lib = {
 	},
 	print:function(el){		
 		this.print.remove = function(){			
-			$('#modal').html('').hide(200);			
+			$('#modal').html('').hide(T.opts.slideSpeed);			
 		}
-		$('#modal').html($('.area').html()).show(200).click(T.lib.print.remove);		
+		$('#modal').html($('.area').html()).show(T.opts.slideSpeed).click(T.lib.print.remove);		
 		return false;
 	}
 };
@@ -126,45 +125,63 @@ T.leftMenu = (function(self, $){
 			},
 			slideInside: function(){
 				if($('ul',this.elements[this.selectedIndex]).is(':visible')){
-					$('ul',this.elements[this.selectedIndex]).hide(200);						
+					$('ul',this.elements[this.selectedIndex]).hide(T.opts.slideSpeed);						
 				}
 				else{
-					$('ul',this.elements[_c2.selectedIndex]).show(200);						
+					$('ul',this.elements[_c2.selectedIndex]).show(T.opts.slideSpeed);						
 				}
 				$(self.context).focus();					
 			},
-			clickCurrent:function(){
-				$('a',this.elements[this.selectedIndex])[0].click();
+			clickCurrent:function(){				
+				if($.browser.msie){
+					$('a:first',this.elements[this.selectedIndex]).click().blur();	
+					setTimeout(function(){ //ie hack while menu not opened we cant to set focus show(T.opts.slideSpeed) 
+						$(self.context).focus();
+					}
+					,T.opts.slideSpeed);	
+				}
+				else{
+					$('a:first',this.elements[this.selectedIndex]).click();						
+					$(self.context).focus();				
+				}			
 			},
 			resetFocus:function(e){
 				e.preventDefault();
 				$(self.context).blur();				
 				return false;			
-			},
+			},			
 			mousewheel: function(){		
 				$(document).bind('mousewheel', function(event) {  			
 					var delta = event.wheelDelta || -event.detail;			
-					if($(self.context).hasClass('focused')){				
+					if(self.isFocused()){				
 						(delta<0)?_c2.selectNext():_c2.selectPrev();				
 						event.preventDefault();
 					}	
 				}).mousedown(function(event){	
-					if($(self.context).hasClass('focused')){
-						event.preventDefault();
-						event.stopPropagation();
+					if(self.isFocused()){						
+						event.preventDefault();						
 						switch(event.which)	{
 							case 1:_c2.clickCurrent();break;
 							case 2:_c2.slideInside();break;
 							case 3:_c2.resetFocus(event);break;							
-						}							
-					}
-					return false;	
+						}
+						return false;							
+					}					
+				}).bind('dblclick',function(){
+					if(!self.isFocused()){
+						$(self.context).focus();	
+					}				
 				});	
 			},
 			
 				
 	}
 	
+
+	
+	self.isFocused = function(){
+		return $(self.context).hasClass('focused');
+	};
 	self.itemClick = function(){
 		var append = function(t,d,el){
 			var t = '<div class="head">'+t+'<a href="html/'+T.lib.getHash(el.href)+'.html" onclick="return T.lib.print(this);">Print</a></div>';
@@ -177,14 +194,14 @@ T.leftMenu = (function(self, $){
 			if($('ul',$(el).parent('li')).size()){
 				_c2.slideInside();
 			}
-			else{			
+			else{ 			
 				var t = $(el).text();
 				var d = $('#'+T.lib.getHash(el.href)).html();
-				if(d!=null){
+				if(d!=null){ // content inside page
 					append(t, d, el);					
 				}
-				else{					
-					T.loader.getJSON('html/'+T.lib.getHash(el.href)+'.html', function(data){				
+				else{	//content must be loaded				
+					T.loader.getJSON('html/'+T.lib.getHash(el.href)+'.html', function(data){	
 						append(t, data, el);		
 					});					
 				}
@@ -197,7 +214,7 @@ T.leftMenu = (function(self, $){
 	self.start = function(){		
 		$(self.context).focus(function(){ 					 
 			$(this).addClass('focused');
-			$(document).bind('contextmenu',function(){return false;});		
+			//$(document).bind('contextmenu',function(){return false;});		
 		}).blur(function(){	
 			var el = this;
 			setTimeout(function(){
@@ -281,7 +298,7 @@ $(document).ready(function(){
 	
 <div id="body-area">
 	<div class="left-menu" tabindex="1" accesskey="q">		
-			<div class="head">Меню (CTRL+SHIFT+Q)</div>
+			<div class="head">Меню (CTRL+SHIFT+Q or dblClick)</div>
 			<ul>
 				<li><a href="#q1">Общие вопросы</a>
 					<ul class="inside hide">
@@ -329,7 +346,7 @@ $(document).ready(function(){
 			<div class="body">
 				<p>Принцип работы левого меню:</p>
 				<ul>
-					<li>При загрузке страницы активируется блок левого меню, (сигнализирует об этом синяя рамка) и перемещаться по меню можно со помощью кнопок мыши.</li>
+					<li>При загрузке страницы активируется блок левого меню, (об этом сигнализирует синяя рамка) и перемещаться по меню можно со помощью кнопок мыши.</li>
 					<li>Когда меню активно, кнопки мыши перестают работать для всей страницы и работают только на левое меню.</li>
 					
 					<li>LeftMouseClick раскрывает уровни меню, если вних вложено еще меню, если подменю не найдено тогда открываем контент текущей ссылки.</li>
@@ -337,8 +354,17 @@ $(document).ready(function(){
 					<li>Scroll на мыши также служит для перемещения по дереву меню, нажатие на ScrollMouseButton аналогичны LeftMouseClick</li>
 					<li>Когда появляется полоса прокрутки в левом меню, ее можно прокручивать с помощью кнопок на клавиатуре Up, Down</li>
 					<li>Если необходимо снять фокус с левого меню (например открыть печатную версию), то кликнув правой мышью в любом месте документа, фокус с меню снимается.</li>
-					<li>Также активировать меню можно с помощью горячих клавиш браузера (mozilla Ctrl+Shift+Q).</li>
-					
+					<li>Также активировать меню можно с помощью горячих клавиш браузера (mozilla Ctrl+Shift+Q) или двойному нажатию девой кнопки мыши.</li>
+					<li>Желательно открывать этот сайт с сервера, потому как при запуске страницы из простой директории (file:///G:/88.178.237.78/yandex/ndx/index.html) в opera 11.64 не работают ajax запросы.</li>
+					<li>Данное управление меню может показаться странным или не обычным, но в процессе написания ответов на вопросы, оно показало  несколько серьезных преимуществ:<br /><br />
+					<ul>
+						<li>Глазам не нужно все время пристраиваться к указателю мыши, водить им и метиться в ссылку.</li>
+						<li>Выбор и перемещение по меню происходит практически усилием мысли.</li>
+						<li>Подцепить меню также просто как и отцепить и использовать мышь для выделения или копирования текста.</li>
+						<li>Также, когда мы загрузили данные с сервера при активном меню нажав на левую клавишу (в любой области экрана) происходит новый запрос и обновление блока ответа данного запроса (очень удобно когда хочется мгновенно видеть измененый текст (например редактируя ошибки) и огромная экономия сил и глазного внимания если бы мы нажимали F5), т.е. опять же на уровне усилия мысли мы сразу получаем нужную информацию, доставленую в фокус глаза.</li>
+						<li>Его принцип построения может иметь любую вложенность.</li>
+					</ul>
+					</li>
 				</ul>
 			</div>
 		</div>
