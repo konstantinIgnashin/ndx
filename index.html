@@ -46,6 +46,16 @@ T.loader = {
 
 };
 
+// some browsers compatible functions
+T.browsers = (function(){ 
+	if(!window.console){
+		window.console = {
+			log:function(){
+				$('body').append('<div>'+arguments[0]+'</div>');
+			}
+		};
+	}
+})();
 
 
 T.lib = {
@@ -75,20 +85,26 @@ T.leftMenu = (function(self, $){
 			elements:{},
 			selectedIndex:0,
 			lastIndex:0,			
-			scrollController:function(){
-				if($(this.elements[this.selectedIndex]).offset().top>570){
-					var newScroll = $(this.c).scrollTop() + $(this.elements[this.selectedIndex]).height();
-					$(this.c).scrollTop(newScroll);					
+			scrollContext:function(delta){
+				if(this.selectedIndex==0){					
+					$(this.c).scrollTop(0);	
+					return false;				
 				}
-				//console.log($(this.elements[this.selectedIndex]).offset().top);
-				if($(this.elements[this.selectedIndex]).offset().top<$(this.c).scrollTop()){
-					var newScroll = $(this.c).scrollTop() - $(this.elements[this.selectedIndex]).height();
-					$(this.c).scrollTop(newScroll);		
+				if(this.selectedIndex==this.lastIndex){
+					$(this.c).scrollTop(900);
+					return false;						
+				}				
+				var el = $('a:first',this.elements[this.selectedIndex]), newScroll;				
+				if(delta>0){					
+					newScroll = $(this.c).scrollTop() + el.height()+ parseInt($(el).css('padding-top')) + parseInt($(el).css('padding-bottom'));
+					$(this.c).scrollTop(newScroll);	
 				}
-				//console.log($(this.elements[this.selectedIndex]).offset().top);
+				else{
+					newScroll = $(this.c).scrollTop() - el.height() - parseInt($(el).css('padding-top')) - parseInt($(el).css('padding-bottom'));
+					$(this.c).scrollTop(newScroll);			
+				}
 			},
-			callBack: function(){
-				this.scrollController();
+			callBack: function(){				
 				$(this.c).focus();												
 			},
 			loadData:function(){
@@ -120,23 +136,27 @@ T.leftMenu = (function(self, $){
 						}
 						index++;
 					}
-				}				
+				}
+				this.scrollContext(1);
+								
 			},
 			selectPrev:function(){				
 				if($(this.elements[this.selectedIndex-1]).is(':visible')){
-					this.selectCurrent(this.selectedIndex-1);				
+					this.selectCurrent(this.selectedIndex-1);									
 				}
 				else{
 					var index = this.selectedIndex-1;
 					(index<0)?index=this.lastIndex:'';					
 					while(this.elements[index]){
 						if($(this.elements[index]).is(':visible')){
-							this.selectCurrent(index);
+							this.selectCurrent(index);								
 							break;						
 						}
 						index--;
 					}
-				}						
+				}
+				this.scrollContext(-1);	
+								
 			},
 			selectCurrent:function(index){
 				$('li', this.c).removeClass('active');					
@@ -246,7 +266,7 @@ T.leftMenu = (function(self, $){
 		_c2.loadData();
 		_c2.selectFirst();
 		_c2.mousewheel();
-		self.itemClick();
+		self.itemClick();		
 	}
 
 	return self;
