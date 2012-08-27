@@ -117,7 +117,7 @@ function getCurrency(price){
 	this.quotes['€'] = 43;
 	this.quotes['¥'] = 20;
 	this.quotes['$'] = 32;
-	return price.replace(price[0],'')*this.quotes[price[0]] + price[0];	
+	return price.replace(price.charAt(0),'')*this.quotes[price.charAt(0)] + 'Рублей';	
 }
 
 </script>
