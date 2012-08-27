@@ -8,7 +8,7 @@
 <script type="text/javascript" src="js/jquery.mousewheel.js"></script>
 <script>
 var T = {};
-T.opts = {slideSpeed:200};
+T.opts = {slideSpeed:200,menuAnimateSpeed:400};
 T.loader = {
 	el:'.app-loader',
 	isBusy:false,
@@ -85,25 +85,28 @@ T.leftMenu = (function(self, $){
 			elements:{},
 			selectedIndex:0,
 			lastIndex:0,			
+			setScroll:function(newScroll){
+				$(this.c).animate({scrollTop:newScroll}, T.opts.menuAnimateSpeed);
+			},
 			scrollContext:function(delta){
 				if(this.selectedIndex==0){					
-					$(this.c).scrollTop(0);	
+					this.setScroll(0);					
 					return false;				
 				}
 				if(this.selectedIndex==this.lastIndex){
-					$(this.c).scrollTop(900);
+					this.setScroll(900);				
 					return false;						
 				}				
 				var el = $('a:first',this.elements[this.selectedIndex]), newScroll;				
 				if(delta>0){					
-					newScroll = $(this.c).scrollTop() + el.height()+ parseInt($(el).css('padding-top')) + parseInt($(el).css('padding-bottom'));
-					$(this.c).scrollTop(newScroll);	
+					newScroll = $(this.c).scrollTop() + el.height()+ parseInt($(el).css('padding-top')) + parseInt($(el).css('padding-bottom'));					
 				}
 				else{
-					newScroll = $(this.c).scrollTop() - el.height() - parseInt($(el).css('padding-top')) - parseInt($(el).css('padding-bottom'));
-					$(this.c).scrollTop(newScroll);			
+					newScroll = $(this.c).scrollTop() - el.height() - parseInt($(el).css('padding-top')) - parseInt($(el).css('padding-bottom'));												
 				}
+				this.setScroll(newScroll);				
 			},
+			
 			callBack: function(){				
 				$(this.c).focus();												
 			},
