@@ -55,9 +55,13 @@ T.lib = {
 	},
 	print:function(el){		
 		this.print.remove = function(){			
-			$('#modal').html('').hide(T.opts.slideSpeed);			
+			$('.bg').remove();
+			$('#modal').html('').hide(T.opts.slideSpeed);	
+			return false;		
 		}
-		$('#modal').html($('.area').html()).show(T.opts.slideSpeed).click(T.lib.print.remove);		
+		$('body').append('<div class="bg"></div>');
+		$('.bg').click(T.lib.print.remove);
+		$('#modal').html($('.area').html()).show(T.opts.slideSpeed);		
 		return false;
 	}
 };
@@ -272,7 +276,7 @@ $(document).ready(function(){
 	.area{float:right;}
 	
 	.answer-tpl {border:1px solid #ccc; background:#fbfbfb; width:880px; border-radius: 3px 3px 0 0;}
-	.answer-tpl .head {padding:7px;border-bottom:1px solid #ccc; background:#f3f3f3;font-size:16px;font-weight:bold;border-radius: 3px 3px 0 0;}
+	.answer-tpl .head {padding:7px;border-bottom:1px solid #ccc; background:#f3f3f3;font-size:16px;font-weight:bold;border-radius: 3px 3px 0 0;}	
 	.answer-tpl .head a {float:right; text-decoration:underline; cursor:pointer;color:#0066FF;font-size:13px;}
 	.answer-tpl .body {padding:10px 7px 30px;}
 	.answer-tpl .body ul {margin-left:15px;}
@@ -282,7 +286,8 @@ $(document).ready(function(){
 	#footer .border {border-top: 1px solid #FBFBFB;} 
 	#footer .site-info { padding:8px 10px 11px 5px; text-align:center;}
 	
-	#modal {background: #fff; font: 13px "Verdana",Helvetica,sans-serif;width:100%; position:absolute;top:0;height:100%;display:none;}
+	.bg {width:100%;height:100%; position:absolute;top:0;z-index:100;background: #fff; }
+	#modal {position:absolute;top:0;display:none;z-index:101;width:880px;margin-left:20%;}	
 	#modal .answer-tpl {margin:0 auto;}
 </style>
 
