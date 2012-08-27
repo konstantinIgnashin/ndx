@@ -75,9 +75,22 @@ T.leftMenu = (function(self, $){
 			elements:{},
 			selectedIndex:0,
 			lastIndex:0,			
+			scrollController:function(){
+				if($(this.elements[this.selectedIndex]).offset().top>570){
+					var newScroll = $(this.c).scrollTop() + $(this.elements[this.selectedIndex]).height();
+					$(this.c).scrollTop(newScroll);					
+				}
+				//console.log($(this.elements[this.selectedIndex]).offset().top);
+				if($(this.elements[this.selectedIndex]).offset().top<$(this.c).scrollTop()){
+					var newScroll = $(this.c).scrollTop() - $(this.elements[this.selectedIndex]).height();
+					$(this.c).scrollTop(newScroll);		
+				}
+				//console.log($(this.elements[this.selectedIndex]).offset().top);
+			},
 			callBack: function(){
+				this.scrollController();
 				$(this.c).focus();												
-			},	
+			},
 			loadData:function(){
 				$("li", this.c).each(function(i, value) {    					
 					_c2.lastIndex = i;
