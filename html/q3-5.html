@@ -95,5 +95,62 @@ if args.message != '':
     print(args.message)
 
 print(count)
+</textarea>
+<p><strong>Bash</strong> Столкнулся с проблемой кодировок, созданный в windows файл не работает как bash скрипт. Файл необходимо создать на сервере а затем уже вбивать в него код. Затем его можно скопировать и редактировать в блокноте на windows машине.</p>
+<textarea class="script">
+#!/bin/bash 
+
+usage() 
+{
+    cat << EOF
+Usage: printargs.sh [OPTIONS] [ARGUMENTS]
+  Print the number of arguments.
+
+OPTIONS:
+  -h      print help message
+  -m MSG  custom message
+  -v verbose mode
+
+Examples:
+  printargs.sh a b c
+  printargs.sh -m 'Arguments count: ' a b c
+ printargs.sh -h
+
+EOF
+}
+
+while getopts .hmv:. OPTION # TODO: add '-v' option for verbose mode
+do
+    case $OPTION in
+        h)
+            usage
+            exit 1
+            shift;;
+        m)
+            MESSAGE=$OPTARG
+            shift;shift;;
+	v)
+	   VERBOSE=$OPTARG
+	   shift;shift;
+    esac
+done
+
+COUNT=0
+
+for ARG in $@; do
+    # TODO: add '-v' option for verbose mode
+    # and print each argument
+   if [[ "$VERBOSE" != "" ]]; then
+    echo $ARG
+   fi
+ let COUNT+=1
+done
+
+if [[ "$MESSAGE" != "" ]]; then
+    echo $MESSAGE
+fi
+
+echo $COUNT
 
 </textarea>
+<p>Работу всех 3х скриптов проверил на centos 5.3</p>
