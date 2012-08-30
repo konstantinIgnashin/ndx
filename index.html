@@ -47,15 +47,21 @@ T.loader = {
 };
 
 // some browsers compatible functions
-T.browsers = (function(){ 
+T.browsers = (function(self,$){ 
 	if(!window.console){
 		window.console = {
 			log:function(){
-				$('body').append('<div>'+arguments[0]+'</div>');
+				$('.debug').append('<div>'+arguments[0]+'</div>');
 			}
 		};
 	}
-})();
+	self.start= function(){
+		if(!$('.debug').size()){
+			$('body').append('<div class="debug"></div>');
+		}	
+	}
+	return self;
+})(T.browsers || {},jQuery);
 
 
 T.lib = {
@@ -257,6 +263,7 @@ T.leftMenu = (function(self, $){
 	}	
 	
 	self.start = function(){		
+		T.browsers.start();
 		$(self.context).focus(function(){ 					 
 			$(this).addClass('focused');
 			//$(document).bind('contextmenu',function(){return false;});		
@@ -325,8 +332,11 @@ $(document).ready(function(){
 	#footer .site-info { padding:8px 10px 11px 5px; text-align:center;}
 	
 	.bg {width:100%;height:100%; position:fixed;top:0;z-index:100;background: #fff; }
-	#modal {position:absolute;top:0;display:none;z-index:101;width:880px;margin-left:20%;}	
+	#modal {position:absolute;top:0;display:none;z-index:101;width:880px;}	
 	#modal .answer-tpl {margin:0 auto;}
+	
+	.debug {margin: 1px auto 5px; width: 1243px;}
+	.debug div{padding:5px; border-bottom:dotted 1px #ccc;}
 
 </style>
 <!--[if IE]>
@@ -447,7 +457,7 @@ $(document).ready(function(){
 	<div id="q1-10">Обучению могу уделить могу от 2х до 4х часов в будни, возможны и другие варианты.</div>
 	
 </div>
-	<div id="modal"></div>
+	<div id="modal"></div>	
 </body>
 </html>
 
