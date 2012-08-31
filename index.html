@@ -79,6 +79,12 @@ T.lib = {
 		$('.bg').click(T.lib.print.remove);
 		$('#modal').html($('.area').html()).show(T.opts.slideSpeed);		
 		return false;
+	},
+	addHover:function(){
+		$(this).addClass('hover');			
+	},
+	removeHover:function(){
+		$(this).removeClass('hover');		
 	}
 };
 
@@ -241,6 +247,9 @@ T.leftMenu = (function(self, $){
 		}
 		
 		$(self.context+' a').click(function(){			
+			if($('a.hover',self.context).size()){
+					return false;
+			}
 			var el = this;
 			if($('ul',$(el).parent('li')).size()){
 				_c2.slideInside();
@@ -259,7 +268,7 @@ T.leftMenu = (function(self, $){
 				
 			}			
 			return false;
-		});
+		}).hover(T.lib.addHover,T.lib.removeHover);
 	}	
 	
 	self.start = function(){		
